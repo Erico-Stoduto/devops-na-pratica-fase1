@@ -1,0 +1,34 @@
+name: CI Pipeline - DevOps na Prática
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v3
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Instalar dependências
+        run: npm install || echo "Sem dependências para instalar"
+
+      - name: Validar estrutura do projeto
+        run: echo "Verificando arquivos e pastas..." && ls -R
+
+      - name: Testar HTML
+        run: |
+          echo "Verificando se index.html existe..."
+          test -f ./src/index.html && echo "Arquivo encontrado!" || exit 1
+
+      - name: Finalização
+        run: echo "Pipeline executado com sucesso!"
