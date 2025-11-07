@@ -19,13 +19,14 @@ Além disso, foi configurado um **pipeline de Integração Contínua (CI)** util
 
 devops-na-pratica-fase1/
 ├── src/
-│ └── index.html # Página do site
+│   └── index.html          # Página do site
 ├── infra/
-│ ├── main.tf # Criação do bucket S3
-│ ├── variables.tf # Variáveis de configuração
-│ └── outputs.tf # Saída da execução
+│   ├── main.tf             # Criação do bucket S3
+│   ├── variables.tf        # Variáveis de configuração
+│   └── outputs.tf          # Saída da execução
 └── .github/
-└── workflows/ci.yml # Pipeline de Integração Contínua
+    └── workflows/ci.yml    # Pipeline de Integração Contínua
+
 
 ## Acesso ao Site Hospedado
 http://devops-na-pratica-erico-site.s3-website-us-east-1.amazonaws.com/
