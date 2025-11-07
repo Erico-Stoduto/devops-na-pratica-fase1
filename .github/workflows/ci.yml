@@ -30,16 +30,16 @@ jobs:
       - name: Testar HTML principal
         run: |
           echo "Verificando se o arquivo index.html existe na pasta src..."
-          test -f ./src/index.html && echo "✅ index.html encontrado!" || (echo "❌ index.html não encontrado!" && exit 1)
+          test -f ./src/index.html && echo "index.html encontrado." || (echo "index.html não encontrado." && exit 1)
 
       - name: Validar estrutura básica do HTML
         run: |
-          echo "Verificando se o arquivo contém tags HTML básicas..."
+          echo "Validando estrutura básica do HTML..."
           if grep -q "<html" ./src/index.html && grep -q "</html>" ./src/index.html; then
-            echo "✅ Estrutura HTML válida!"
+            echo "Estrutura HTML válida."
           else
-            echo "❌ Estrutura HTML inválida!" && exit 1
+            echo "Estrutura HTML inválida." && exit 1
           fi
 
       - name: Finalização
-        run: echo "🚀 Pipeline executado com sucesso!"
+        run: echo "Pipeline executado com sucesso."
