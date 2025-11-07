@@ -1,5 +1,3 @@
-# main.tf - Infraestrutura como Código (IaC)
-
 terraform {
   required_providers {
     aws = {
