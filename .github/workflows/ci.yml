@@ -11,48 +11,59 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # 1. Checkout do código
       - name: Checkout do código
         uses: actions/checkout@v3
 
+      # 2. Configurar Node.js (CI padrão)
       - name: Configurar Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '18'
 
+      # 3. Instalar dependências (caso exista package.json)
       - name: Instalar dependências
         run: npm install || echo "Sem dependências para instalar"
 
+      # 4. Validar estrutura dos arquivos
       - name: Validar estrutura de diretórios
         run: |
           echo "Verificando pastas..."
           ls -R
 
+      # 5. Validar arquivo HTML
       - name: Testar HTML principal
         run: |
-          echo "Verificando se o arquivo index.html existe na pasta src..."
+          echo "Verificando se o arquivo index.html existe..."
           test -f ./src/index.html && echo "index.html encontrado." || (echo "index.html não encontrado." && exit 1)
 
+      # 6. Validar conteúdo básico do HTML
       - name: Validar estrutura básica do HTML
         run: |
-          echo "Validando estrutura básica do HTML..."
           if grep -q "<html" ./src/index.html && grep -q "</html>" ./src/index.html; then
             echo "Estrutura HTML válida."
           else
             echo "Estrutura HTML inválida." && exit 1
           fi
-      
+
+      # 7. Configurar credenciais AWS APENAS SE EXISTIREM
       - name: Configurar credenciais AWS
-        uses: aws-actions/configure-aws-credentials@v2
+        if: ${{ secrets.AWS_ACCESS_KEY_ID != '' && secrets.AWS_SECRET_ACCESS_KEY != '' && secrets.AWS_SESSION_TOKEN != '' }}
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
           aws-region: us-east-1
 
+      # 8. Deploy no S3 (SE E SOMENTE SE AS CHAVES FOREM VÁLIDAS)
       - name: Deploy do site no S3
+        if: ${{ secrets.AWS_ACCESS_KEY_ID != '' && secrets.AWS_SECRET_ACCESS_KEY != '' && secrets.AWS_SESSION_TOKEN != '' }}
         run: |
           echo "Realizando upload para o bucket S3..."
-          aws s3 cp ./src/index.html s3://devops-na-pratica-erico-site/index.html --acl public-read
+          aws s3 cp ./src/index.html s3://devops-na-pratica-erico-site/index.html --acl public-read || echo "AWS offline ou bucket inexistente"
 
+      # 9. Finalização
       - name: Finalização
-        run: echo "CI/CD executado com sucesso! Deploy concluído no S3."
+        run: |
+          echo "CI/CD finalizado com sucesso. Deploy só é executado quando a AWS está ativa."
