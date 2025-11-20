@@ -1,4 +1,4 @@
-name: CI Pipeline - DevOps na Prática
+name: CI/CD Pipeline - DevOps na Prática
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
     branches: [ main ]
 
 jobs:
-  build:
+  build_and_deploy:
     runs-on: ubuntu-latest
 
     steps:
@@ -40,6 +40,19 @@ jobs:
           else
             echo "Estrutura HTML inválida." && exit 1
           fi
+      
+      - name: Configurar credenciais AWS
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: us-east-1
+
+      - name: Deploy do site no S3
+        run: |
+          echo "Realizando upload para o bucket S3..."
+          aws s3 cp ./src/index.html s3://devops-na-pratica-erico-site/index.html --acl public-read
 
       - name: Finalização
-        run: echo "Pipeline executado com sucesso."
+        run: echo "CI/CD executado com sucesso! Deploy concluído no S3."
