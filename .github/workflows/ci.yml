@@ -37,10 +37,9 @@ jobs:
             echo "HTML inválido." && exit 1
           fi
 
-      # CONFIGURAR AWS — mas NÃO quebrar o pipeline se falhar
-      - name: Tentar configurar credenciais AWS
+      # CONFIGURAR AWS ACADEMY (AGORA NÃO IGNORA ERRO)
+      - name: Configurar credenciais AWS
         id: awscreds
-        continue-on-error: true
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -48,12 +47,30 @@ jobs:
           aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
           aws-region: us-east-1
 
-      # DEPLOY SÓ SE A CONFIGURAÇÃO AWS TIVER SUCESSO
-      - name: Deploy no S3
-        if: steps.awscreds.outcome == 'success'
+      # CRIAR BUCKET SE NÃO EXISTIR
+      - name: Criar bucket S3 (se não existir)
         run: |
-          echo "Realizando upload para o S3..."
+          aws s3api head-bucket --bucket devops-na-pratica-erico-site 2>/dev/null \
+          || aws s3api create-bucket --bucket devops-na-pratica-erico-site --region us-east-1
+
+      # TORNAR BUCKET PÚBLICO
+      - name: Permitir acesso público ao bucket
+        run: |
+          aws s3api put-bucket-acl \
+            --bucket devops-na-pratica-erico-site \
+            --acl public-read
+
+      # CONFIGURAR SITE ESTÁTICO
+      - name: Ativar website estático
+        run: |
+          aws s3 website s3://devops-na-pratica-erico-site/ \
+            --index-document index.html \
+            --error-document index.html
+
+      # DEPLOY DA PÁGINA
+      - name: Upload do index.html
+        run: |
           aws s3 cp ./src/index.html s3://devops-na-pratica-erico-site/index.html --acl public-read
 
       - name: Finalização
-        run: echo "Pipeline executado. Deploy só roda se AWS estiver ativa."
+        run: echo "Deploy concluído com sucesso no S3."
