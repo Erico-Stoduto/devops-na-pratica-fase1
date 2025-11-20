@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Site DevOps na Prática</title>
+  <title>Site DevOps na Prática - Fase 2</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -18,11 +18,33 @@
     p {
       color: #333;
       font-size: 18px;
+      max-width: 700px;
+      margin: 0 auto;
+    }
+    .tag {
+      margin-top: 20px;
+      display: inline-block;
+      background: #1b73e8;
+      color: white;
+      padding: 8px 15px;
+      border-radius: 8px;
+      font-weight: bold;
     }
   </style>
 </head>
 <body>
-  <h1>Projeto DevOps na Prática - Fase 1</h1>
-  <p>Este site foi criado para demonstrar a aplicação prática dos conceitos de Integração Contínua e Infraestrutura como Código.</p>
+  <h1>Projeto DevOps na Prática – Fase 2</h1>
+
+  <p>
+    Esta atualização faz parte da Fase 2 do projeto, demonstrando a expansão do pipeline
+    para <strong>Entrega Contínua (CI/CD)</strong> com deploy automático para um bucket S3.
+  </p>
+
+  <p>
+    Cada alteração enviada ao GitHub aciona automaticamente o pipeline,
+    validando o HTML e publicando a nova versão deste site.
+  </p>
+
+  <div class="tag">CI/CD ativo e funcionando</div>
 </body>
 </html>
