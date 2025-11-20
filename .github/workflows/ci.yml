@@ -10,9 +10,6 @@ jobs:
   build_and_deploy:
     runs-on: ubuntu-latest
 
-    env:
-      HAS_AWS_KEYS: ${{ secrets.AWS_ACCESS_KEY_ID != '' && secrets.AWS_SECRET_ACCESS_KEY != '' && secrets.AWS_SESSION_TOKEN != '' }}
-
     steps:
       - name: Checkout do código
         uses: actions/checkout@v3
@@ -30,7 +27,7 @@ jobs:
 
       - name: Testar HTML principal
         run: |
-          test -f ./src/index.html && echo "index.html encontrado." || (echo "index.html não encontrado." && exit 1)
+          test -f ./src/index.html || (echo "index.html não encontrado." && exit 1)
 
       - name: Validar estrutura básica do HTML
         run: |
@@ -40,8 +37,10 @@ jobs:
             echo "HTML inválido." && exit 1
           fi
 
-      - name: Configurar credenciais AWS
-        if: env.HAS_AWS_KEYS == 'true'
+      # CONFIGURAR AWS — mas NÃO quebrar o pipeline se falhar
+      - name: Tentar configurar credenciais AWS
+        id: awscreds
+        continue-on-error: true
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -49,11 +48,12 @@ jobs:
           aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
           aws-region: us-east-1
 
-      - name: Deploy do site no S3
-        if: env.HAS_AWS_KEYS == 'true'
+      # DEPLOY SÓ SE A CONFIGURAÇÃO AWS TIVER SUCESSO
+      - name: Deploy no S3
+        if: steps.awscreds.outcome == 'success'
         run: |
           echo "Realizando upload para o S3..."
-          aws s3 cp ./src/index.html s3://devops-na-pratica-erico-site/index.html --acl public-read || echo "AWS indisponível ou bucket não existe"
+          aws s3 cp ./src/index.html s3://devops-na-pratica-erico-site/index.html --acl public-read
 
       - name: Finalização
-        run: echo "Pipeline CI/CD concluído. Deploy só executado se AWS estiver ativa."
+        run: echo "Pipeline executado. Deploy só roda se AWS estiver ativa."
