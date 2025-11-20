@@ -13,66 +13,38 @@ jobs:
     steps:
       # 1) Checkout
       - name: Checkout do código
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      # 2) Node
+      # 2) Node.js (CI)
       - name: Configurar Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: 18
 
-      # 3) Instalar dependências
       - name: Instalar dependências
         run: npm install || echo "Sem dependências para instalar"
 
-      # 4) Validar estrutura
-      - name: Validar estrutura de diretórios
-        run: ls -R
-
-      # 5) Validar HTML
-      - name: Checar HTML principal
+      - name: Validar HTML
         run: |
-          test -f ./src/index.html || (echo "index.html não encontrado." && exit 1)
+          test -f ./src/index.html || (echo "index.html ausente!" && exit 1)
+          grep -q "<html" ./src/index.html || exit 1
+          grep -q "</html>" ./src/index.html || exit 1
+          echo "HTML válido ✔️"
 
-      - name: Validar estrutura básica do HTML
-        run: |
-          if grep -q "<html" ./src/index.html && grep -q "</html>" ./src/index.html; then
-            echo "HTML válido."
-          else
-            echo "HTML inválido." && exit 1
-          fi
+      # 3) Build Docker (necessário para Fase 2)
+      - name: Construir imagem Docker
+        run: docker build -t devops-app -f docker/Dockerfile .
 
-      # 6) Construção da imagem Docker
-      - name: Build da imagem Docker
+      # 4) Testar container
+      - name: Testar container
         run: |
-          echo "Construindo imagem Docker..."
-          docker build -t devops-academico -f docker/Dockerfile .
-
-      # 7) Testar container
-      - name: Testar container Docker
-        run: |
-          echo "Rodando container..."
-          docker run --name teste -d -p 8080:80 devops-academico || echo "Falha no container (não reprova CI)"
+          docker run -d -p 8080:80 --name devops-container devops-app
           sleep 3
-          docker ps -a
+          docker ps | grep devops-container || (echo "Falha ao iniciar container" && exit 1)
+          docker stop devops-container
 
-      # 8) Entrega Contínua (CD) — gerar artefatos
-      - name: Preparar build para entrega contínua
-        run: |
-          echo "Criando pasta dist para entrega contínua..."
-          mkdir -p dist
-          cp -r src/* dist/
-          echo "Build pronto para entrega (CD)."
-
-      # 9) Publicar artefatos do CD
-      - name: Publicar artefatos CD
-        uses: actions/upload-artifact@v3
-        with:
-          name: build-entregavel
-          path: dist
-
-      # 10) Tentar configurar AWS (opcional)
-      - name: Tentar configurar credenciais AWS (não reprova)
+      # 5) Configurar AWS (opcional – não quebra pipeline)
+      - name: Configurar AWS opcional
         id: awscreds
         continue-on-error: true
         uses: aws-actions/configure-aws-credentials@v4
@@ -82,13 +54,26 @@ jobs:
           aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
           aws-region: us-east-1
 
-      # 11) Deploy opcional — só roda se AWS funcionar
-      - name: Deploy opcional no S3
+      # 6) Deploy no S3 (somente se AWS estiver ativa)
+      - name: Deploy no S3
         if: steps.awscreds.outcome == 'success'
         run: |
-          echo "Realizando upload opcional para o S3..."
-          aws s3 cp ./src/index.html s3://devops-na-pratica-erico-site/index.html --acl public-read
+          echo "Deploy para o S3 iniciado..."
+          aws s3 cp src/index.html s3://devops-na-pratica-erico-site/index.html --acl public-read
+          echo "Deploy finalizado com sucesso ✔️"
 
-      # 12) Finalização
+      # 7) Upload de artefatos (versão correta v4)
+      - name: Upload do Dockerfile como artefato
+        uses: actions/upload-artifact@v4
+        with:
+          name: dockerfile
+          path: docker/Dockerfile
+
+      - name: Upload do compose
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-compose
+          path: docker/docker-compose.yml
+
       - name: Finalização
-        run: echo "Pipeline CI/CD finalizado com sucesso."
+        run: echo "Pipeline finalizado sem erros! ✔️"
