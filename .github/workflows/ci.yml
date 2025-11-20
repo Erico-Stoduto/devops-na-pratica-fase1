@@ -11,11 +11,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1) Checkout
+      #Checkout
       - name: Checkout do código
         uses: actions/checkout@v4
 
-      # 2) Node.js (CI)
+      #Node.js (CI)
       - name: Configurar Node.js
         uses: actions/setup-node@v4
         with:
@@ -31,11 +31,11 @@ jobs:
           grep -q "</html>" ./src/index.html || exit 1
           echo "HTML válido ✔️"
 
-      # 3) Build Docker (necessário para Fase 2)
+      #Build Docker
       - name: Construir imagem Docker
         run: docker build -t devops-app -f docker/Dockerfile .
 
-      # 4) Testar container
+      #Testar container
       - name: Testar container
         run: |
           docker run -d -p 8080:80 --name devops-container devops-app
@@ -43,7 +43,7 @@ jobs:
           docker ps | grep devops-container || (echo "Falha ao iniciar container" && exit 1)
           docker stop devops-container
 
-      # 5) Configurar AWS (opcional – não quebra pipeline)
+      #Configurar AWS
       - name: Configurar AWS opcional
         id: awscreds
         continue-on-error: true
@@ -54,7 +54,7 @@ jobs:
           aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
           aws-region: us-east-1
 
-      # 6) Deploy no S3 (somente se AWS estiver ativa)
+      #Deploy no S3 (somente se AWS estiver ativa)
       - name: Deploy no S3
         if: steps.awscreds.outcome == 'success'
         run: |
@@ -62,7 +62,7 @@ jobs:
           aws s3 cp src/index.html s3://devops-na-pratica-erico-site/index.html --acl public-read
           echo "Deploy finalizado com sucesso ✔️"
 
-      # 7) Upload de artefatos (versão correta v4)
+      #Upload de artefatos
       - name: Upload do Dockerfile como artefato
         uses: actions/upload-artifact@v4
         with:
