@@ -15,6 +15,3 @@ Além disso, foi configurado um **pipeline de Integração Contínua (CI)** util
 - Terraform (Infraestrutura como Código)
 - HTML/CSS
 
-## Acesso ao Site Hospedado
-http://devops-na-pratica-erico-site.s3-website-us-east-1.amazonaws.com/
-
